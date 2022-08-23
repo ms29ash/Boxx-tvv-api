@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const userVerifySchema = new Schema({
-    OTP: { type: Number },
+    OTP: { type: String },
     userId: { type: String },
     createdAt: { type: Date, default: Date.now },
 });

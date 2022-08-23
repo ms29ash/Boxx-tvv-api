@@ -2,6 +2,7 @@ import express from 'express';
 import connectToMongo from './db.js';
 import shows from './Routes/shows.js';
 import movies from './Routes/movies.js';
+import auth from './Routes/auth.js';
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 
@@ -26,6 +27,7 @@ app.get('/', (req, res) => {
 
 app.use('/movies', movies);
 app.use('/shows', shows);
+app.use('/auth', auth);
 
 app.listen(port, (err, res) => {
     if (err) {

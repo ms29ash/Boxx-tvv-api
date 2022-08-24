@@ -63,6 +63,10 @@ router.post('/signup',
                 email: email,
                 password: hashPass,
             })
+            if (!user) {
+                res.status(500).json({ success: false, message: "Internal Server Error" })
+            }
+
             let otp = otpGenerator.generate(4, { specialChars: false, upperCaseAlphabets: false, lowerCaseAlphabets: false })
 
 
@@ -93,7 +97,7 @@ router.post('/signup',
             const authtoken = jwt.sign(data, process.env.JWT_SECRET);
 
 
-            res.cookie('verifyToken', authtoken);
+            res.cookie('token', authtoken);
 
             res.status(201).json({ success: true })
 
@@ -101,7 +105,6 @@ router.post('/signup',
 
 
         } catch (error) {
-            console.log(error);
             console.log(error.message);
             res.status(500).json({ success: false, message: "Internal Server Error" })
 
@@ -133,8 +136,10 @@ router.put('/verify', [
                 userId: userId,
             }
             const token = jwt.sign(data, process.env.JWT_SECRET);
+            res.cookie('token', token);
 
-            return res.json({ success: true, token: token })
+
+            return res.json({ success: true, message: "verified email" })
         } else {
             return res.status(403).json({ success: false, error: 'Otp not matched' })
 
@@ -147,5 +152,35 @@ router.put('/verify', [
     }
 
 })
+
+
+router.get('/signin',
+    [
+        body('email', 'Enter a email address').not().isEmpty().isEmail(),
+        body('password', 'Enter a password').not().isEmpty().isLength({ min: 6 }),
+    ],
+    async (req, res) => {
+        const { email, password } = req.body;
+        let user = await User.findOne({ email: email });
+        if (!user) {
+            return res.status(409).json({ success: false, message: 'no such user exist' })
+        } else {
+            const match = await bcrypt.compare(password, user.password);
+
+            if (match) {
+                let data = {
+                    userId: user._id,
+                }
+                const token = jwt.sign(data, process.env.JWT_SECRET);
+                res.cookie('token', token);
+
+
+                return res.status(200).json({ success: true, message: "Signed In" })
+            } else {
+                return res.status(401).json({ success: false, error: "Wrong Password" })
+            }
+        }
+
+    })
 
 export default router;

@@ -1,12 +1,12 @@
 import jwt from 'jsonwebtoken';
 
 const fetchIds = async (req, res, next) => {
-    const { verifyToken } = await req.cookies;
-    if (!verifyToken) {
+    const { token } = await req.cookies;
+    if (!token) {
         res.status(404).send({ error: "Please authenticate using a valid token no token" })
     }
     try {
-        const data = jwt.verify(verifyToken, process.env.JWT_SECRET);
+        const data = jwt.verify(token, process.env.JWT_SECRET);
         req.user = data;
         next();
     } catch (error) {

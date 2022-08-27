@@ -94,12 +94,8 @@ router.post('/signup',
                 userId: user._id,
                 verifyId: otpObject._id,
             }
-            const authtoken = jwt.sign(data, process.env.JWT_SECRET);
-
-
-            res.cookie('token', authtoken);
-
-            res.status(201).json({ success: true })
+            const token = jwt.sign(data, process.env.JWT_SECRET);
+            res.status(201).json({ success: true, token: token })
 
 
 
@@ -136,10 +132,9 @@ router.put('/verify', [
                 userId: userId,
             }
             const token = jwt.sign(data, process.env.JWT_SECRET);
-            res.cookie('token', token);
 
 
-            return res.json({ success: true, message: "verified email" })
+            return res.json({ success: true, message: "verified email", token: token })
         } else {
             return res.status(403).json({ success: false, error: 'Otp not matched' })
 
@@ -172,10 +167,9 @@ router.get('/signin',
                     userId: user._id,
                 }
                 const token = jwt.sign(data, process.env.JWT_SECRET);
-                res.cookie('token', token);
 
 
-                return res.status(200).json({ success: true, message: "Signed In" })
+                return res.status(200).json({ success: true, message: "Signed In", token: token })
             } else {
                 return res.status(401).json({ success: false, error: "Wrong Password" })
             }

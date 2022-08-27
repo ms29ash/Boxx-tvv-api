@@ -14,6 +14,7 @@ const port = process.env.PORT || 4000;
 //Connecting to database
 connectToMongo();
 
+
 app.use(cors())
 app.use(express.json());
 app.use(cookieParser());

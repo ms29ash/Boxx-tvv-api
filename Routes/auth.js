@@ -149,7 +149,7 @@ router.put('/verify', [
 })
 
 
-router.get('/signin',
+router.post('/signin',
     [
         body('email', 'Enter a email address').not().isEmpty().isEmail(),
         body('password', 'Enter a password').not().isEmpty().isLength({ min: 6 }),
@@ -176,22 +176,25 @@ router.get('/signin',
         }
 
     })
-router.get('/user', fetchIds, async (req, res) => {
 
+router.post('/user', fetchIds, (req, res) => {
+
+    const { userId } = req.user;
+    console.log(userId);
     try {
 
-
-        const { userId } = req.user;
-
-        let user = await User.findOne({ _id: userId });
-        if (!user) {
-            return res.status(409).json({ success: false, message: 'no such user exist' })
+        let user = User.findOne({ _id: userId });
+        if (user) {
+            return res.status(200).send({ success: true, username: user.username, email: user.email });
         } else {
-            res.status(200).json({ success: true, username: user.username, email: user.email })
+            return res.status(401).send('user not found');
+
         }
     } catch (error) {
         console.log(error)
     }
+
+
 
 })
 

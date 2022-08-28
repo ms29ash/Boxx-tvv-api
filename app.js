@@ -14,19 +14,10 @@ const port = process.env.PORT || 4000;
 //Connecting to database
 connectToMongo();
 
-let whitelist = ['http://localhost:3000', 'https://boxx-tvv.web.app/']
-let corsOptions = {
-    origin: function (origin, callback) {
-        if (whitelist.indexOf(origin) !== -1) {
-            callback(null, true)
-        } else {
-            callback(new Error('Not allowed by CORS'))
-        }
-    }
-}
 
 
-app.use(cors(corsOptions))
+
+app.use(cors())
 app.use(express.json());
 app.use(cookieParser());
 

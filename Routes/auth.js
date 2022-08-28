@@ -177,13 +177,20 @@ router.get('/signin',
 
     })
 router.get('/user', fetchIds, async (req, res) => {
-    const { userId } = req.user;
 
-    let user = await User.findOne({ _id: userId });
-    if (!user) {
-        return res.status(409).json({ success: false, message: 'no such user exist' })
-    } else {
-        res.status(200).json({ success: true, username: user.username, email: user.email })
+    try {
+
+
+        const { userId } = req.user;
+
+        let user = await User.findOne({ _id: userId });
+        if (!user) {
+            return res.status(409).json({ success: false, message: 'no such user exist' })
+        } else {
+            res.status(200).json({ success: true, username: user.username, email: user.email })
+        }
+    } catch (error) {
+        console.log(error)
     }
 
 })

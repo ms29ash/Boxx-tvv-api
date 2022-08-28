@@ -9,7 +9,7 @@ import nodemailer from 'nodemailer'
 import 'dotenv/config'
 import jwt from 'jsonwebtoken';
 //middlewares
-import fetchIds from '../middleware/verify.js'
+import fetchIds from '../middleware/verifyUser.js'
 
 //Hash Password
 const saltRounds = 10;
@@ -94,8 +94,8 @@ router.post('/signup',
                 userId: user._id,
                 verifyId: otpObject._id,
             }
-            const token = jwt.sign(data, process.env.JWT_SECRET);
-            res.status(201).json({ success: true, token: token })
+            const authToken = jwt.sign(data, process.env.JWT_SECRET);
+            res.status(201).json({ success: true, authToken: authToken })
 
 
 
@@ -176,5 +176,16 @@ router.get('/signin',
         }
 
     })
+router.get('/user', fetchIds, async (req, res) => {
+    const { userId } = req.user;
+
+    let user = await User.findOne({ _id: userId });
+    if (!user) {
+        return res.status(409).json({ success: false, message: 'no such user exist' })
+    } else {
+        res.status(200).json({ success: true, username: user.username, email: user.email })
+    }
+
+})
 
 export default router;

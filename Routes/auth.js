@@ -64,7 +64,7 @@ router.post('/signup',
                 password: hashPass,
             })
             if (!user) {
-                res.status(500).json({ success: false, message: "Internal Server Error" })
+                res.status(500).json({ success: false, message: "User already exists" })
             }
 
             let otp = otpGenerator.generate(4, { specialChars: false, upperCaseAlphabets: false, lowerCaseAlphabets: false })
@@ -101,8 +101,9 @@ router.post('/signup',
 
 
         } catch (error) {
+            console.log(error);
             console.log(error.message);
-            res.status(500).json({ success: false, message: "Internal Server Error" })
+            res.status(500).json({ success: false, message: "Internal Server Error yana" })
 
         }
 

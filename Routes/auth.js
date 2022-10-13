@@ -33,6 +33,7 @@ let transporter = nodemailer.createTransport({
 
 
 router.post('/signup',
+    // Express validator
     [
         body('username', 'Enter the username').not().isEmpty().isLength({ min: 2 }),
         body('email', 'Enter a email address').not().isEmpty().isEmail(),
@@ -42,15 +43,22 @@ router.post('/signup',
 
         const { email, username, password } = req.body;
 
+        //Validation Errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(500).json({ success: false, message: errors.array() })
         }
 
         try {
+            //Find already exist user
             let user = await User.findOne({ email: email });
             if (user) {
-                return res.status(409).json({ success: false, message: 'user already exists' })
+                if (user.verified === true) {
+                    return res.status(409).json({ success: false, message: 'user already exists' })
+                } else {
+                    //If user is not verified then delete user
+                    User.findOneAndDelete({ email: email });
+                }
             }
 
             //generating hash for password
@@ -67,14 +75,14 @@ router.post('/signup',
                 res.status(500).json({ success: false, message: "User already exists" })
             }
 
+            //Generating OTP
             let otp = otpGenerator.generate(4, { specialChars: false, upperCaseAlphabets: false, lowerCaseAlphabets: false })
-
 
             let OtpVerify = {
                 userId: user._id,
                 OTP: otp
             }
-
+            //Saving OTP in database
             let otpObject = await UserVerify.create(OtpVerify);
 
 
@@ -87,93 +95,108 @@ router.post('/signup',
             }
 
             //send mail to the user
-            await transporter.sendMail(mailOptions);
-            console.log('Email has been sent successfully');
+            const mail = await transporter.sendMail(mailOptions);
+            if (mail) {
+                console.log(mail);
 
-            let data = {
-                userId: user._id,
-                verifyId: otpObject._id,
+
+                let data = {
+                    userId: user._id,
+                    verifyId: otpObject._id,
+                }
+                //encrypting data in jwt token
+                const authToken = jwt.sign(data, process.env.JWT_SECRET);
+                res.status(201).json({ success: true, authToken: authToken, message: 'Email has been sent successfully' })
             }
-            const authToken = jwt.sign(data, process.env.JWT_SECRET);
-            res.status(201).json({ success: true, authToken: authToken })
-
-
-
 
         } catch (error) {
             console.log(error);
             console.log(error.message);
-            res.status(500).json({ success: false, message: "Internal Server Error yana" })
+            res.status(500).json({ success: false, message: "Internal Server Error" })
 
         }
 
     })
 
 
-router.put('/verify', [
-    body('otp', "Enter the correct otp").not().isEmpty().isLength({ min: 4, max: 4 })
-], fetchIds, async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(403).json({ success: false, errors: errors.array() })
-    }
-
-    const { userId, verifyId } = req.user;
-    try {
-
-        let userVerify = await UserVerify.findOne({ _id: verifyId });
-        if (!userVerify) {
-            return res.json({ success: false, error: "User not found" })
+router.put('/verify',
+    //Express validator
+    [
+        body('otp', "Enter the correct otp").not().isEmpty().isLength({ min: 4, max: 4 })
+    ]
+    //fetching ids
+    , fetchIds, async (req, res) => {
+        //Validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(403).json({ success: false, errors: errors.array() })
         }
-        if (userVerify.OTP === req.body.otp) {
-            await UserVerify.deleteOne({ _id: verifyId });
-            await User.findOneAndUpdate({ _id: userId }, { verified: true })
 
-            let data = {
-                userId: userId,
+        const { userId, verifyId } = req.user;
+        try {
+
+            let userVerify = await UserVerify.findOne({ _id: verifyId });
+            //Find Otp in database
+            if (!userVerify) {
+                return res.json({ success: false, error: "User not found" })
             }
-            const token = jwt.sign(data, process.env.JWT_SECRET);
+            //Matching Otp
+            if (userVerify.OTP === req.body.otp) {
+                await UserVerify.deleteOne({ _id: verifyId });
+                await User.findOneAndUpdate({ _id: userId }, { verified: true })
+
+                let data = {
+                    userId: userId,
+                }
+                const token = jwt.sign(data, process.env.JWT_SECRET);
 
 
-            return res.json({ success: true, message: "verified email", token: token })
-        } else {
-            return res.status(403).json({ success: false, error: 'Otp not matched' })
+                return res.json({ success: true, message: "verified email", token: token })
+            } else {
+                return res.status(403).json({ success: false, error: 'Otp not matched' })
 
+            }
+        } catch (errors) {
+            console.log(errors);
+            return res.status(500).json({ success: false, message: 'Internal server error' })
         }
 
-
-
-    } catch (errors) {
-
-    }
-
-})
+    })
 
 
 router.post('/signin',
+    // Express validator
     [
         body('email', 'Enter a email address').not().isEmpty().isEmail(),
         body('password', 'Enter a password').not().isEmpty().isLength({ min: 6 }),
     ],
     async (req, res) => {
         const { email, password } = req.body;
-        let user = await User.findOne({ email: email });
-        if (!user) {
-            return res.status(409).json({ success: false, message: 'no such user exist' })
-        } else {
-            const match = await bcrypt.compare(password, user.password);
-
-            if (match) {
-                let data = {
-                    userId: user._id,
-                }
-                const token = jwt.sign(data, process.env.JWT_SECRET);
-
-
-                return res.status(200).json({ success: true, message: "Signed In", token: token })
+        try {
+            //Finding User
+            let user = await User.findOne({ email: email });
+            //User not found
+            if (!user) {
+                return res.status(409).json({ success: false, message: 'no such user exist' })
             } else {
-                return res.status(401).json({ success: false, error: "Wrong Password" })
+                //Matching Password
+                const match = await bcrypt.compare(password, user.password);
+
+                if (match) {
+                    let data = {
+                        userId: user._id,
+                    }
+                    const token = jwt.sign(data, process.env.JWT_SECRET);
+
+
+                    return res.status(200).json({ success: true, message: "Signed In", token: token })
+                } else {
+                    return res.status(401).json({ success: false, error: "Wrong Password" })
+                }
             }
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ success: false, message: 'Internal server error' })
         }
 
     })
@@ -181,18 +204,17 @@ router.post('/signin',
 router.post('/user', fetchIds, (req, res) => {
 
     const { userId } = req.user;
-    console.log(userId);
     try {
-
+        //Finding User
         let user = User.findOne({ _id: userId });
         if (user) {
             return res.status(200).send({ success: true, username: user.username, email: user.email });
         } else {
             return res.status(401).send('user not found');
-
         }
     } catch (error) {
-        console.log(error)
+        console.log(error);
+        return res.status(500).json({ success: false, message: 'Internal server error' })
     }
 
 

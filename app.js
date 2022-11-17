@@ -4,6 +4,7 @@ import shows from './Routes/shows.js';
 import movies from './Routes/movies.js';
 import auth from './Routes/auth.js';
 import anime from './Routes/anime.js';
+import { addListRouter, removeListRouter, listRouter } from './Routes/list.js';
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 
@@ -33,6 +34,10 @@ app.use('/movies', movies);
 app.use('/shows', shows);
 app.use('/auth', auth);
 app.use('/anime', anime);
+app.use('/addToList', addListRouter);
+app.use('/removefromList', removeListRouter);
+app.use('/getList', listRouter);
+
 
 app.listen(port, (err, res) => {
     if (err) {

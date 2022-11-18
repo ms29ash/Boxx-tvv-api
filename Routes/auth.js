@@ -201,14 +201,15 @@ router.post('/signin',
 
     })
 
-router.post('/user', fetchIds, (req, res) => {
+router.post('/user', fetchIds, async (req, res) => {
 
     const { userId } = req.user;
     try {
         //Finding User
-        let user = User.findOne({ _id: userId });
+        let user = await User.findOne({ _id: userId });
         if (user) {
-            return res.status(200).send({ success:true,data:{email:user.email,username:user.username,watchlist:user.watchlist,favorites:user.favorites} });
+            console.log(user);
+            return res.status(200).send({ success: true, user: { email: user.email, username: user.username, watchlist: user.watchlist, favorites: user.favorites } });
         } else {
             return res.status(401).send('user not found');
         }

@@ -11,15 +11,17 @@ addListRouter.post('/:list', fetchIds, async (req, res) => {
         let list = req.params.list;
         let user = await User.findOne({ _id: userId })
         if (list === 'favorites') {
-            user?.favorites?.push(req.body.item);
-        } else if (list === 'watchlist') {
-            user?.watchlist?.push(req.body.item);
+            let update = user?.favorites?.push(req.body.item);
+            await user.save()
+            return res.status(201).send({ success: true, message: `Added to ${list}`, item: user.favorites[update - 1] })
+        } else if (list === 'watchlater') {
+            let update = user?.watchlater?.push(req.body.item);
+            await user.save()
+            return res.status(201).send({ success: true, message: `Added to ${list}`, item: user?.watchlater[update - 1] })
         } else {
             return res.status(400).send({ success: false, message: "Something wrong" })
         }
-        let updatelist = await user.save()
-        console.log(updatelist);
-        return res.status(201).send({ success: true, message: `Added to ${list}` })
+
     } catch (error) {
         console.log(error);
         return res.status(500).send({ success: false, message: 'Internal Server Error' })
@@ -33,13 +35,12 @@ removeListRouter.put('/:list', fetchIds, async (req, res) => {
         let list = req.params.list;
         let user = await User.findOne({ _id: userId });
         if (list === 'favorites') {
-            updatelist = user.favorites.splice(req.body.id, 1);
-        } else if (list === 'watchlist') {
-            updatelist = user.watchlist.splice(req.body.id, 1);
+            user.favorites.splice(req.body.id, 1);
+        } else if (list === 'watchlater') {
+            user.watchlater.splice(req.body.id, 1);
         }
         let updatelist = await user.save();
-        console.log(updatelist);
-        return res.status(201).send({ success: true, message: 'Added to Watchlist' })
+        return res.status(201).send({ success: true, message: 'Removed to Watchlist' })
     } catch (error) {
         console.log(error);
         return res.status(500).send({ success: false, message: 'Internal Server Error' })
@@ -53,8 +54,8 @@ listRouter.get('/:list', fetchIds, async (req, res) => {
         let user = await User.findOne({ _id: userId });
         if (list === 'favorites') {
             return res.status(200).send({ favorites: user.favorites })
-        } else if (list === 'watchlist') {
-            return res.status(200).send({ watchlist: user.watchlist })
+        } else if (list === 'watchlater') {
+            return res.status(200).send({ watchlist: user.watchlater })
         }
     } catch (error) {
         console.log(error);

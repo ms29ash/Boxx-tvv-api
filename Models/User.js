@@ -3,8 +3,8 @@ const { Schema } = mongoose;
 
 const listSchema = new Schema({
     type: { type: String, required: true },
-    id: { type: String, required: true }
-})
+    id: { type: String, required: true },
+}, { timestamps: { createdAt: true, updatedAt: false } })
 
 const userSchema = new Schema({
     email: { type: String, required: true },
@@ -12,7 +12,7 @@ const userSchema = new Schema({
     password: { type: String, required: true },
     verified: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
-    watchlist: [listSchema],
+    watchlater: [listSchema],
     favorites: [listSchema],
 
 }, { timestamps: true })

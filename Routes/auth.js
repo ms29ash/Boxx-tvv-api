@@ -208,8 +208,7 @@ router.post('/user', fetchIds, async (req, res) => {
         //Finding User
         let user = await User.findOne({ _id: userId });
         if (user) {
-            console.log(user);
-            return res.status(200).send({ success: true, user: { email: user.email, username: user.username, watchlist: user.watchlist, favorites: user.favorites } });
+            return res.status(200).send({ success: true, user: { email: user.email, username: user.username, watchlater: user.watchlater, favorites: user.favorites } });
         } else {
             return res.status(401).send('user not found');
         }

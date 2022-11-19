@@ -46,7 +46,7 @@ router.post('/signup',
         //Validation Errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(500).json({ success: false, message: errors.array() })
+            return res.status(500).json({ success: false, message: errors.array(), message: 'Something wrong' })
         }
 
         try {
@@ -129,7 +129,7 @@ router.put('/verify',
         //Validation errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(403).json({ success: false, errors: errors.array() })
+            return res.status(403).json({ success: false, errors: errors.array(), message: 'Something wrong' })
         }
 
         const { userId, verifyId } = req.user;
@@ -138,7 +138,7 @@ router.put('/verify',
             let userVerify = await UserVerify.findOne({ _id: verifyId });
             //Find Otp in database
             if (!userVerify) {
-                return res.json({ success: false, error: "User not found" })
+                return res.status(409).send({ success: false, error: "User not found" })
             }
             //Matching Otp
             if (userVerify.OTP === req.body.otp) {
@@ -172,6 +172,11 @@ router.post('/signin',
     ],
     async (req, res) => {
         const { email, password } = req.body;
+        //Validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(403).json({ success: false, errors: errors.array(), message: 'Something wrong' })
+        }
         try {
             //Finding User
             let user = await User.findOne({ email: email });
@@ -191,7 +196,7 @@ router.post('/signin',
 
                     return res.status(200).json({ success: true, message: "Signed In", token: token })
                 } else {
-                    return res.status(401).json({ success: false, error: "Wrong Password" })
+                    return res.status(401).json({ success: false, message: "Wrong Password" })
                 }
             }
         } catch (error) {

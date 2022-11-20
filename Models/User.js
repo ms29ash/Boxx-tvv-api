@@ -3,8 +3,8 @@ const { Schema } = mongoose;
 
 const listSchema = new Schema({
     type: { type: String },
-    id: { type: String },
-}, { sparse: true, timestamps: { createdAt: true, updatedAt: false } })
+    id: { type: String, unique: true },
+}, { timestamps: { createdAt: true, updatedAt: false } })
 
 const userSchema = new Schema({
     email: { type: String, required: true, unique: true },
@@ -17,6 +17,8 @@ const userSchema = new Schema({
 
 }, { timestamps: true })
 
+listSchema.index({ _id: 1 }, { sparse: true });
+listSchema.index({ id: 1 }, { sparse: true });
 const User = mongoose.model('User', userSchema);
 
 export default User;

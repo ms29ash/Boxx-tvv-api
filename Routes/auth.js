@@ -57,7 +57,7 @@ router.post('/signup',
                     return res.status(409).json({ success: false, message: 'user already exists' })
                 } else {
                     //If user is not verified then delete user
-                    User.findOneAndDelete({ email: email });
+                    await User.findOneAndDelete({ email: email });
                 }
             }
 

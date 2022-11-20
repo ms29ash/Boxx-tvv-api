@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const listSchema = new Schema({
-    type: { type: String, required: true },
-    id: { type: String, required: true, unique: true },
+    type: { type: String },
+    id: { type: String },
 }, { timestamps: { createdAt: true, updatedAt: false } })
 
 const userSchema = new Schema({
